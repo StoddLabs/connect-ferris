@@ -1,6 +1,8 @@
-use std::borrow::Borrow;
 use eframe::egui;
 use egui::Response;
+use egui::WidgetText::RichText;
+use egui::WidgetType::Button;
+use std::borrow::{Borrow, BorrowMut};
 
 fn main() {
     // Log to stdout (if you run with `RUST_LOG=debug`).
@@ -17,44 +19,67 @@ fn main() {
     )
 }
 
-#[derive(Clone)]
 struct Board {
     board_layout: Vec<BoardSlot>,
-}
-#[derive(Clone)]
-struct BoardSlot {
-    x_coordinate: i32,
-    y_coordinate: i32,
-    button: Response,
+
 }
 
+struct BoardSlot {
+    id: i32,
+    x_coordinate: i32,
+    y_coordinate: i32,
+}
 
 impl Default for Board {
     fn default() -> Self {
-        Self {
+        let mut b = Board::new();
+        let mut curr_id = 0;
+        for y_cord in 0..9 {
+            for x_cord in 0..9 {
+                let bl = BoardSlot {
+                    id: curr_id,
+                    x_coordinate: x_cord,
+                    y_coordinate: y_cord,
+                };
+                curr_id += 1;
+                b.board_layout.push(bl);
+            }
+        }
+        b
+    }
+}
+
+impl Board {
+    fn new() -> Self {
+        Board {
             board_layout: Vec::new(),
         }
     }
 }
 
 impl eframe::App for Board {
-
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         egui::CentralPanel::default().show(ctx, |ui| {
             ui.heading("My egui Application");
-            for y_cord in 0..9 {
-                    ui.horizontal(|ui| {
-                        for x_cord in 0..9 {
-                            let b = BoardSlot{x_coordinate: x_cord, y_coordinate: y_cord, button: ui.button("| |")};
-                            self.board_layout.push(b.clone());
-                            if b.clone().button.clicked() {
-                               println!("{},{}", b.borrow().x_coordinate, b.borrow().y_coordinate);
-                            }
-                        }
-                    });
-                }
+            let mut curr_count = 0;
+            for _ in 0..9 {
+                ui.horizontal(|ui| {
+                    for _ in 0..9 {
+                        let curr = self.board_layout.get(curr_count).unwrap();
+                        if ui
+                            .button("|      |")
+                            .on_hover_text(format!(
+                                "x: {}, y: {}",
+                                curr.x_coordinate, curr.y_coordinate
+                            ))
+                            .clicked()
+                        {
+                            println!("{},{}", curr.x_coordinate, curr.y_coordinate);
+                        };
+                        curr_count += 1;
+                    }
+                });
+            }
         });
-
-
     }
 }
