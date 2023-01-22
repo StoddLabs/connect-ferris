@@ -1,8 +1,6 @@
 use eframe::egui;
-use egui::{Response, Vec2};
-use egui::WidgetText::RichText;
-use egui::WidgetType::Button;
-use std::borrow::{Borrow, BorrowMut};
+use egui::Vec2;
+use std::collections::HashMap;
 
 fn main() {
     // Log to stdout (if you run with `RUST_LOG=debug`).
@@ -20,34 +18,29 @@ fn main() {
 }
 
 struct Board {
-    board_layout: Vec<BoardSlot>,
+    //board_layout: Vec<BoardSlot>,
+    board_layout: std::collections::HashMap<(i32, i32), BoardSlot>,
     turn: i32,
-
 }
 
 struct BoardSlot {
-    id: i32,
     x_coordinate: i32,
     y_coordinate: i32,
     slot_value: String,
-
-
 }
 
 impl Default for Board {
     fn default() -> Self {
         let mut b = Board::new();
-        let mut curr_id = 0;
         for y_cord in 0..9 {
             for x_cord in 0..9 {
                 let bl = BoardSlot {
-                    id: curr_id,
                     x_coordinate: x_cord,
                     y_coordinate: y_cord,
                     slot_value: String::from("  "),
                 };
-                curr_id += 1;
-                b.board_layout.push(bl);
+                //b.board_layout.push(bl);
+                b.board_layout.insert((x_cord, y_cord), bl);
             }
         }
         b
@@ -57,7 +50,8 @@ impl Default for Board {
 impl Board {
     fn new() -> Self {
         Board {
-            board_layout: Vec::new(),
+            //board_layout: Vec::new(),
+            board_layout: HashMap::new(),
             turn: 0,
         }
     }
@@ -66,12 +60,12 @@ impl Board {
 impl eframe::App for Board {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         egui::CentralPanel::default().show(ctx, |ui| {
-            ui.heading("My egui Application");
+            ui.heading("Connect Feris");
             let mut curr_count = 0;
-            for _ in 0..9 {
+            for x_cord in 0..9 {
                 ui.horizontal(|ui| {
-                    for _ in 0..9 {
-                        let mut curr = self.board_layout.get_mut(curr_count).unwrap();
+                    for y_cord in 0..9 {
+                        let mut curr = self.board_layout.get_mut(&(x_cord, y_cord)).unwrap();
                         let b = egui::Button::new(&curr.slot_value).min_size(Vec2::new(50.0, 50.0));
                         if ui
                             //.button(&curr.slot_value)
@@ -82,16 +76,19 @@ impl eframe::App for Board {
                             ))
                             .clicked()
                         {
-                            println!("{},{}", curr.x_coordinate, curr.y_coordinate);
-                            if self.turn == 0 {
-                                curr.slot_value = String::from("X");
-                                self.turn = 1;
-                            } else {
-                                curr.slot_value = String::from("O");
-                                self.turn = 0;
+                            if curr.slot_value == String::from("  ") {
+                                if self.turn == 0 {
+                                    curr.slot_value = String::from("X");
+                                    self.turn = 1;
+                                } else {
+                                    curr.slot_value = String::from("O");
+                                    self.turn = 0;
+                                }
                             }
-
-
+                            println!(
+                                "{},{},{}",
+                                curr.x_coordinate, curr.y_coordinate, curr.slot_value
+                            );
                         };
                         curr_count += 1;
                     }
